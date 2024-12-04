@@ -1,6 +1,8 @@
 ## 🎉 Welcome to **Lampy** 🎉  
 ### _The Ambient Lighthouse for Your Workspace_
 
+![lampy-cropped](https://github.com/user-attachments/assets/868d936f-6fce-4a02-bf0c-422489557082)
+
 Welcome, curious creator! Lampy isn’t just a lamp; it transforms your desk into a realm of glowing rainbows, twinkling fireflies, and fiery infernos. The magic? Open-source love combined with some spicy, absurd creativity.
 
 ---
