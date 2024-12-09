@@ -8,6 +8,8 @@
 // - Ocean waves
 // - Shooting stars
 // - Matrix-style rain
+// - Field of Asters
+// - Orchard of Mandarin Trees
 
 // First, we need to include some special tools (like getting art supplies ready):
 #include <Adafruit_NeoPixel.h>  // This helps us control our LED light strip
@@ -22,6 +24,8 @@ void matrix(int dropSpeed, int fadeSpeed, int newDropChance);  // Makes Matrix-s
 void water(int cycleSpeed);     // Makes ocean wave effects
 void spirula(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay);  // Makes shooting stars
 void kelp(int cycleSpeed); // Makes radioactive kelp waves
+void aster(int cycleSpeed); // Like a field of asters
+void mandarin(int cycleSpeed); // Like an orchard of mandarin trees
 
 // ===== SETTING UP OUR LIGHT STRIP =====
 #define LED_PIN    D0          // Which pin our lights are connected to 
@@ -36,7 +40,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);  // Our LED s
 unsigned long previousMillis = 0;  // This is like a stopwatch to help control timing
 const long interval = 10;          // How often we update our patterns (in milliseconds)
 int state = 0;                    // Which light pattern we're showing (like choosing a TV channel)
-int brightness = 200;             // How bright our lights are (0 = off, 255 = super bright!; caution: super bright colors will seem washed out compared to the less brighter ones)
+int brightness = 175;             // How bright our lights are (0 = off, 255 = super bright!; caution: super bright colors will seem washed out compared to the less brighter ones)
 int currentBrightness = 50;      // Keeps track of current brightness while fading
 
 // ===== GETTING STARTED =====
@@ -62,9 +66,10 @@ void loop() {
   // State 1 = Purple Shooting Stars
   // State 2 = Rainbow Magic
   // State 3 = Gentle Fireflies
-  // State 4 = Matrix Rain
+  // State 4 = Aster
   // State 5 = Ocean Waves
   // State 6 = Radioactive Kelp
+  // State 7 = Mandarin Orange
 
   // We only update the lights every 'interval' milliseconds
   // This is like taking a tiny break between drawing each frame
@@ -104,9 +109,10 @@ void loop() {
       previousMillis = millis();
     }
   }
-  else if (state == 4) {  // MATRIX MODE
+  else if (state == 4) {  // ASTER MODE
     if ((unsigned long)(millis() - previousMillis) >= interval) {
-      matrix(150, 20, 2);  // Controls: drop speed, fade speed, new drop chance
+      aster(1);  // Controls how fast the waves move
+      strip.show();
       previousMillis = millis();
     }
   }
@@ -123,13 +129,46 @@ void loop() {
       strip.show();
       previousMillis = millis();
     }
+  } else if (state == 7) {  // MANDARIN TREE MODE
+    if ((unsigned long)(millis() - previousMillis) >= interval) {
+      mandarin(1);  // Controls how fast the waves move
+      strip.show();
+      previousMillis = millis();
+    }
   }
+}
+
+// ===== GAMMA CORRECTION TABLE =====
+const uint8_t PROGMEM gamma8[] = {
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
+    1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
+    2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
+    5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
+   10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
+   17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
+   25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
+   37, 38, 39, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50,
+   51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68,
+   69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83, 85, 86, 87, 89,
+   90, 92, 93, 95, 96, 98, 99,101,102,104,105,107,109,110,112,114,
+  115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
+  144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
+  177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
+  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
+
+// ===== PIXEL SETTING WITH GAMMA CORRECTION =====
+void setGammaPixel(int Pixel, byte red, byte green, byte blue) {
+  strip.setPixelColor(Pixel,
+    pgm_read_byte(&gamma8[red]),
+    pgm_read_byte(&gamma8[green]),
+    pgm_read_byte(&gamma8[blue]));
 }
 
 // ===== PATTERN SWITCHING =====
 void switchMode() {
   // This is like changing the TV channel to a different pattern
-  state = (state + 1) % 7;  // Cycle through modes 0-5 (like a circle)
+  state = (state + 1) % 8;  // Cycle through modes 0-5 (like a circle)
   preferences.putInt("state", state);  // Write it in Lampy's diary
   Serial.printf("Switched to mode %d\n", state);  // Tell the computer what mode we're in
 }
@@ -228,6 +267,63 @@ void kelp(int cycleSpeed) {
   strip.show();
 
   // Move the water pattern a little bit for next time
+  cycles = (cycles + max(1, cycleSpeed / 3)) % (256 * 5);
+}
+
+
+// ===== MANDARIN TREE PATTERN =====
+void mandarin(int cycleSpeed) {
+  static int cycles = 0;  // Keeps track of where we are in the wave pattern
+
+  // Aster colors! Imagine an orchard of mandarins:
+  uint32_t color1 = strip.Color(209, 53, 40);   // Deep Orange
+  uint32_t color2 = strip.Color(6, 115, 51);   // Foliage  
+  uint32_t color3 = strip.Color(3, 78, 35);   // Arbor Green
+
+  // Color each LED in the strip
+  for (int i = 0; i < strip.numPixels(); i++) {
+    uint32_t color = Wheel(((i * 256 / strip.numPixels()) + cycles) & 255,
+                           color1, color2, color3);
+
+    // Extract RGB values from the color
+    byte r = (color >> 16) & 0xFF;
+    byte g = (color >> 8) & 0xFF;
+    byte b = color & 0xFF;
+
+    // Apply gamma correction and set the pixel
+    setGammaPixel(i, r, g, b);
+  }
+  strip.show();
+
+  // Move the pattern a little bit for the next frame
+  cycles = (cycles + max(1, cycleSpeed / 3)) % (256 * 5);
+}
+
+// ===== ASTER PATTERN =====
+void aster(int cycleSpeed) {
+  static int cycles = 0;  // Keeps track of where we are in the wave pattern
+
+  // Aster colors! Imagine a field of asters:
+  uint32_t color1 = strip.Color(236, 182, 2);   // Deep Yellow (center of an aster)
+  uint32_t color2 = strip.Color(85, 24, 93);   // Purple (petals of asters)
+  uint32_t color3 = strip.Color(41, 8, 73);    // Violet (hues of asters)
+
+  // Color each LED in the strip
+  for (int i = 0; i < strip.numPixels(); i++) {
+    uint32_t color = Wheel(((i * 256 / strip.numPixels()) + cycles) & 255,
+                           color1, color2, color3);
+
+    // Extract RGB values from the color
+    byte r = (color >> 16) & 0xFF;
+    byte g = (color >> 8) & 0xFF;
+    byte b = color & 0xFF;
+
+    // Apply gamma correction and set the pixel
+    setGammaPixel(i, r, g, b);
+  }
+  strip.show();
+
+  // Move the pattern a little bit for the next frame
   cycles = (cycles + max(1, cycleSpeed / 3)) % (256 * 5);
 }
 
