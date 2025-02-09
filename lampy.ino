@@ -40,7 +40,8 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);  // Our LED s
 unsigned long previousMillis = 0;  // This is like a stopwatch to help control timing
 const long interval = 10;          // How often we update our patterns (in milliseconds)
 int state = 0;                    // Which light pattern we're showing (like choosing a TV channel)
-int brightness = 175;             // How bright our lights are (0 = off, 255 = super bright!; caution: super bright colors will seem washed out compared to the less brighter ones)
+// EDITED: Make the brightness be much closer to a night lamp
+int brightness = 35;             // How bright our lights are (0 = off, 255 = super bright!; caution: super bright colors will seem washed out compared to the less brighter ones)
 int currentBrightness = 50;      // Keeps track of current brightness while fading
 
 // ===== GETTING STARTED =====
@@ -77,17 +78,21 @@ void loop() {
   if (state == 2) {  // RAINBOW MODE
     if ((unsigned long)(millis() - previousMillis) >= interval) {
       // If we're not at full brightness yet, slowly fade up
-      if (currentBrightness < brightness) {
-        for (int i = currentBrightness; i <= brightness; i++) {
-          strip.setBrightness(i);
-          rainbow(1);
-          strip.show();
-          currentBrightness = i;
-        }
-      } else {
-        rainbow(1);
-        strip.show();
-      }
+      // EDITED: Drop the brightness ramp-up logic and just pin it to the global variable
+      // if (currentBrightness < brightness) {
+      //   for (int i = currentBrightness; i <= brightness; i++) {
+      //     strip.setBrightness(i);
+      //     rainbow(1);
+      //     strip.show();
+      //     currentBrightness = i;
+      //   }
+      // } else {
+      //   rainbow(1);
+      //   strip.show();
+      // }
+      strip.setBrightness(brightness);
+      rainbow(1);
+      strip.show();
       previousMillis = millis();
     }
   }
@@ -168,7 +173,9 @@ void setGammaPixel(int Pixel, byte red, byte green, byte blue) {
 // ===== PATTERN SWITCHING =====
 void switchMode() {
   // This is like changing the TV channel to a different pattern
-  state = (state + 1) % 8;  // Cycle through modes 0-5 (like a circle)
+  // EDITED: Hardcode the rainbow pattern
+  // state = (state + 1) % 8;  // Cycle through modes 0-5 (like a circle)
+  state = 2;
   preferences.putInt("state", state);  // Write it in Lampy's diary
   Serial.printf("Switched to mode %d\n", state);  // Tell the computer what mode we're in
 }
